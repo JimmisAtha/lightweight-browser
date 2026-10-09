@@ -11,7 +11,7 @@ const {
 const path = require("path");
 const fetch = require("cross-fetch");
 const { ElectronBlocker } = require("@ghostery/adblocker-electron");
-const { autoUpdater } = require("electron-updater");
+
 
 let mainWindow;
 let tabs = [];
@@ -107,7 +107,6 @@ async function createWindow() {
     },
   });
 
-  setupAutoUpdates(mainWindow);
 
   await setupAdblock();
 
@@ -229,71 +228,4 @@ app.whenReady().then(() => {
 
 app.commandLine.appendSwitch("disable-gpu");
 
-async function setupAutoUpdates(mainWindow) {
-  autoUpdater.on("checking-for-update", () => {
-    dialog.showMessageBox(mainWindow, {
-      type: "info",
-      buttons: [],
-      title: "Checking for Updates",
-      message: "Fate Browser is checking for updates...",
-    });
-  });
 
-  ipcMain.handle("check-for-updates", () => {
-    autoUpdater.checkForUpdatesAndNotify();
-  });
-
-  autoUpdater.on("update-available", (info) => {
-    dialog.showMessageBox(mainWindow, {
-      type: "info",
-      buttons: [],
-      title: "Update Available",
-      message: `An update to version ${info.version} is available.\nDownloading now...`,
-    });
-  });
-
-  autoUpdater.on("update-not-available", () => {
-    dialog.showMessageBox(mainWindow, {
-      type: "info",
-      buttons: [],
-      title: "No Updates Found",
-      message: "You're already running the latest version.",
-    });
-  });
-
-  autoUpdater.on("error", (err) => {
-    dialog.showErrorBox(
-      "Update Error",
-      err == null ? "unknown" : (err.stack || err).toString()
-    );
-  });
-
-  autoUpdater.on("download-progress", (progress) => {
-    const percent = progress.percent.toFixed(1);
-    mainWindow.setTitle(`Downloading update... ${percent}%`);
-  });
-
-  autoUpdater.on("update-downloaded", () => {
-    dialog
-      .showMessageBox(mainWindow, {
-        type: "question",
-        buttons: ["Restart Now", "Later"],
-        defaultId: 0,
-        cancelId: 1,
-        title: "Update Ready",
-        message:
-          "Update downloaded. Do you want to restart now to apply the update?",
-      })
-      .then((result) => {
-        if (result.response === 0) {
-          autoUpdater.quitAndInstall();
-        }
-      });
-  });
-
-  autoUpdater.checkForUpdatesAndNotify();
-}
-
-ipcMain.on("restart-to-update", () => {
-  autoUpdater.quitAndInstall();
-});
