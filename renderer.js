@@ -75,4 +75,3 @@ ipcRenderer.on("update-status", (_, message) => {
   statusDiv.textContent = message;
 });
 
-ipcRenderer.invoke("check-for-updates");
